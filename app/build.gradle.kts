@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pbms"
+    namespace = "com.example.glucosetracker"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.pbms"
+        applicationId = "com.example.glucosetracker"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
