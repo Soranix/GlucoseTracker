@@ -1,6 +1,7 @@
 package com.example.glucosetracker.view
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,6 +39,20 @@ fun AddScreen(
     // this is everything I need for selecting a date via a calendar
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
+    // selecting time
+    var selectedTime by remember { mutableStateOf(calendar.time) }
+
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, hour: Int, minute: Int ->
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+            selectedTime = calendar.time
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        true // 24-hour format
+    )
 
     var selectedDate by remember { mutableStateOf("") } // Show to user
     var dateTimestamp by remember { mutableLongStateOf(System.currentTimeMillis()) } // Save to DB
@@ -87,7 +102,7 @@ fun AddScreen(
             ) {
                 OutlinedTextField(
                     value = value.toString(),
-                    onValueChange = { value = it.toFloat() },
+                    onValueChange = { value = it.toFloatOrNull()?: 0f },
                     label = { Text("Value") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -129,6 +144,16 @@ fun AddScreen(
                         )
                     ) {
                         Text(text = if (selectedDate.isEmpty()) "Pick Date" else selectedDate)
+                    }
+                    Button(
+                        onClick = { timePickerDialog.show() },
+                        modifier = Modifier,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        )
+                    ){
+                        Text(text = "Pick a time")
                     }
 
                 }

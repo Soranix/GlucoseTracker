@@ -19,8 +19,9 @@ import com.example.glucosetracker.model.Reading
 import com.example.glucosetracker.nav.Screen
 import com.example.glucosetracker.viewmodel.HomeViewModel
 import androidx.compose.material.icons.filled.List
-
-
+import java.text.SimpleDateFormat
+import java.util.Formatter
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +35,7 @@ fun HomeScreen(
 
     // to filter to see only dangerous readings
     var showOnlyDangers by remember { mutableStateOf(false) }
+
 
     Scaffold(
         topBar = {
@@ -86,6 +88,17 @@ fun HomeScreen(
 }
 @Composable
 fun ReadingItem(reading: Reading, onClick: () -> Unit) {
+
+    // using this to colour in the number red or blue depending on the value
+    val readingValue = reading.value
+    val valueColor = when {
+        readingValue < 4.0 -> Color.Blue
+        readingValue > 13.9 -> Color.Red
+        else -> MaterialTheme.colorScheme.onSurface // or Color.Black
+    }
+    // time format
+    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -95,14 +108,14 @@ fun ReadingItem(reading: Reading, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = reading.value.toString() + " " + reading.unit,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.Red
+                color = valueColor
                 )
             Text(
                 text = "Added: ${reading.formatDate(reading.dateAdded)}",
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
-                text = "Time: ${reading.readingTime}%",
+                text = "Time: ${timeFormatter.format(reading.readingTime)}",
                 style = MaterialTheme.typography.bodySmall
             )
         }
