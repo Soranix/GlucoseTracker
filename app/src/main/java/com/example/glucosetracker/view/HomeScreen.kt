@@ -39,6 +39,7 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
+            // Header
             CenterAlignedTopAppBar(title = {
                 Text(
                     text = "My Readings",

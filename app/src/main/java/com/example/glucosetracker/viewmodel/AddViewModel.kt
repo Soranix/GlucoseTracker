@@ -17,6 +17,7 @@ class AddViewModel(application: Application) : AndroidViewModel(application) {
     private val _readings = MutableStateFlow<List<Reading>>(emptyList())
     val readings: StateFlow<List<Reading>> = _readings
 
+
     fun addReading(
         value: Float,
         unit: String,
@@ -31,7 +32,7 @@ class AddViewModel(application: Application) : AndroidViewModel(application) {
                 value = value,
                 unit = unit,
                 notes = notes.takeIf { !it.isNullOrBlank() },
-                readingTime = Date(),
+                readingTime = readingTime,
                 dateAdded = dateAdded
             )
             dao.insertReading(reading)

@@ -1,6 +1,7 @@
 package com.example.glucosetracker.view
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +20,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -61,6 +65,10 @@ fun EditScreen(
         viewModel.loadReading(id)
     }
 
+    // need these for editing the date/time
+    val context = LocalContext.current
+    val calendar = remember { Calendar.getInstance() }
+
     val reading by viewModel.reading.collectAsState()
     // Show a loading placeholder otherwise the app would crash. viewModel needs to load and update the stateflow
     if (reading == null) {
@@ -73,15 +81,26 @@ fun EditScreen(
     // Editable fields.
     // !! will throw NullPointerException
     var value by remember { mutableFloatStateOf(reading!!.value) }
-    var unit by remember { mutableStateOf(reading!!.unit) }
+    //var unit by remember { mutableStateOf(reading!!.unit) }
     var notes by remember { mutableStateOf(reading!!.notes ?: "") }
     var dateAdded by remember { mutableLongStateOf(reading!!.dateAdded) }
     var readingTime by remember { mutableStateOf(reading!!.readingTime) }
     var valueText by remember { mutableStateOf(value.toString())}
 
-    // edit date variables
-    val context = LocalContext.current
-    val calendar = remember { Calendar.getInstance() }
+    // edit time state
+    var selectedTime by remember { mutableStateOf(calendar.time) }
+
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, hour: Int, minute: Int ->
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+            selectedTime = calendar.time
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        true // 24-hour format
+    )
 
     val format = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -99,7 +118,10 @@ fun EditScreen(
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
     )
-
+    // for dropdown menu
+    val unitOptions = listOf("mmol/L", "mg/dL")
+    var expanded by remember { mutableStateOf(false) }
+    var unit by remember { mutableStateOf(unitOptions[0]) } // default selection
 
     /*LaunchedEffect(reading){
         reading?.let{
@@ -143,37 +165,76 @@ fun EditScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 // unit
-                OutlinedTextField(
-                    value = unit,
-                    onValueChange = { unit = it.filter { c -> c.isDigit()} },
-                    label = { Text("Author") },
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = {}, // read-only
+                        readOnly = true,
+                        label = { Text("Unit") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        unitOptions.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                text = { Text(selectionOption) },
+                                onClick = {
+                                    unit = selectionOption
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 // notes
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Genre (optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                /* total
-                OutlinedTextField(
-                    value = total,
-                    onValueChange = { total = it.filter { c -> c.isDigit() } },
-                    label = { Text("Total Pages") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    label = { Text("notes (optional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                 */
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Date picker button
-                Button(onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = buttonColors(containerColor = Color.Black, contentColor = Color.White)) {
-                    Text(text = if (selectedDate.isNotEmpty()) selectedDate else "Select Date")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { datePickerDialog.show() },
+                        modifier = Modifier.weight(1f), // Equal width
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = if (selectedDate.isEmpty()) "Select Date" else selectedDate)
+                    }
+
+                    Button(
+                        onClick = { timePickerDialog.show() },
+                        modifier = Modifier.weight(1f), // Equal width
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = "Select Time")
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -199,7 +260,6 @@ fun EditScreen(
                                 unit = unit.trim(),
                                 notes = notes.trim().ifEmpty { null },
                                 readingTime = readingTime,
-
                                 dateAdded = dateTimestamp
                             )
                             viewModel.updateReading(updatedReading) {

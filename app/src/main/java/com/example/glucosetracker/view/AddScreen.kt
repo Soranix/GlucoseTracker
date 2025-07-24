@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +32,7 @@ fun AddScreen(
     viewModel: AddViewModel = viewModel()
 ){
     var value by remember { mutableFloatStateOf(0.0f)}
-    var unit by remember { mutableStateOf("") }
+    //var unit by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var readingTime by remember { mutableStateOf(Date())
     }
@@ -70,14 +71,10 @@ fun AddScreen(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    // for notes drop down menu. It was buggy so I removed it
-    /*var expanded by remember { mutableStateOf(false) }
-    var selectedGenre by remember { mutableStateOf("") }
-    val notesOptions = listOf(
-        "Fiction", "Non-fiction", "Fantasy", "Biography", "Science", "History", "Comedy", "Action", "Romance"
-    )
+    val unitOptions = listOf("mmol/L", "mg/dL")
+    var expanded by remember { mutableStateOf(false) }
+    var unit by remember { mutableStateOf(unitOptions[0]) } // default selection
 
-     */
 
     Scaffold(
         topBar = {
@@ -107,12 +104,37 @@ fun AddScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = unit,
-                    onValueChange = { unit = it },
-                    label = { Text("Unit") },
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = {}, // read-only
+                        readOnly = true,
+                        label = { Text("Unit") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        unitOptions.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                text = { Text(selectionOption) },
+                                onClick = {
+                                    unit = selectionOption
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
 
                 Box(
                     modifier = Modifier
@@ -130,59 +152,61 @@ fun AddScreen(
 
 
 
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
                         onClick = { datePickerDialog.show() },
-                        modifier = Modifier,
+                        modifier = Modifier.weight(1f), // Equal width
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
                         )
                     ) {
-                        Text(text = if (selectedDate.isEmpty()) "Pick Date" else selectedDate)
+                        Text(text = if (selectedDate.isEmpty()) "Select Date" else selectedDate)
                     }
+
                     Button(
                         onClick = { timePickerDialog.show() },
-                        modifier = Modifier,
+                        modifier = Modifier.weight(1f), // Equal width
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
                         )
-                    ){
-                        Text(text = "Pick a time")
+                    ) {
+                        Text(text = "Select Time")
                     }
-
                 }
                     // this button will not appear unless title and unit are not blank.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Button(
-                        onClick =
-                        {
+                        onClick = {
                             viewModel.addReading(
                                 value = value,
                                 unit = unit,
                                 notes = notes,
                                 readingTime = readingTime,
                                 dateAdded = dateTimestamp,
-
                             ) {
-                                navController.popBackStack() // onSuccess
+                                navController.popBackStack()
                             }
                         },
-                        modifier = Modifier,
                         enabled = value.toString().isNotBlank() && unit.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
                         )
-
                     ) {
                         Text("Save")
                     }
                 }
             }
+        }
     )
 }
