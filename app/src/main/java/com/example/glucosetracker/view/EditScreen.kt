@@ -85,7 +85,7 @@ fun EditScreen(
     var notes by remember { mutableStateOf(reading!!.notes ?: "") }
     var dateAdded by remember { mutableLongStateOf(reading!!.dateAdded) }
     var readingTime by remember { mutableStateOf(reading!!.readingTime) }
-    var valueText by remember { mutableStateOf(value.toString())}
+    //var valueText by remember { mutableStateOf(value.toString())}
 
     // edit time state
     var selectedTime by remember { mutableStateOf(calendar.time) }
@@ -123,16 +123,6 @@ fun EditScreen(
     var expanded by remember { mutableStateOf(false) }
     var unit by remember { mutableStateOf(unitOptions[0]) } // default selection
 
-    /*LaunchedEffect(reading){
-        reading?.let{
-            calendar.timeInMillis = it.dateAdded
-            selectedDate = format.format(calendar.time)
-            dateTimestamp = it.dateAdded
-        }
-    }
-     */
-
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -156,11 +146,8 @@ fun EditScreen(
             ) {
                 // value
                 OutlinedTextField(
-                    value = valueText,
-                    onValueChange = {
-                        valueText = it
-                        value = it.toFloatOrNull() ?: 0f  // safe conversion
-                    },
+                    value = value.toString(),
+                    onValueChange = { value = it.toFloatOrNull()?: 0f },
                     label = { Text("Value") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -256,10 +243,10 @@ fun EditScreen(
                     Button(
                         onClick = {
                             val updatedReading = reading!!.copy(
-                                value = valueText.toFloat(),
+                                value = value,
                                 unit = unit.trim(),
                                 notes = notes.trim().ifEmpty { null },
-                                readingTime = readingTime,
+                                readingTime = selectedTime,
                                 dateAdded = dateTimestamp
                             )
                             viewModel.updateReading(updatedReading) {

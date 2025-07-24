@@ -71,6 +71,7 @@ fun AddScreen(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
+    // drop down menu
     val unitOptions = listOf("mmol/L", "mg/dL")
     var expanded by remember { mutableStateOf(false) }
     var unit by remember { mutableStateOf(unitOptions[0]) } // default selection

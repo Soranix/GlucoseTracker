@@ -28,7 +28,7 @@ class HomeViewModel (application: Application) : AndroidViewModel(application){
     private val dao = DatabaseInstance.getDatabase(application).readingDao()
 
 
-    // this function will help load and refresh the database that the user will see
+    // this function will help load and refresh the table that the user will see
 
     // read
     fun loadReadings() {
